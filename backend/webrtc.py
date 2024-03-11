@@ -32,14 +32,14 @@ async def offer(sdp, type):
 
     @pc.on("connectionstatechange")
     async def on_connectionstatechange():
-        print("Connection state is %s", pc.connectionState)
+        print("Connection state is %s" % pc.connectionState)
         if pc.connectionState == "failed":
             await pc.close()
             pcs.discard(pc)
 
     @pc.on("track")
     async def on_track(track: MediaStreamTrack):
-        print("Track %s received, state %s", track.kind, track.readyState)
+        print("Track %s received, state %s" % (track.kind, track.readyState))
 
         if track.kind == "audio":
             recorder.addTrack(track)

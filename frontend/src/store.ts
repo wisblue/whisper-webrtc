@@ -24,6 +24,7 @@ export const updateState = (obj: Partial<conn>) => {
 
 let call = (time) => setTimeout(() => {
     ping().then((res) => {
+        console.log(res);
         if (res) {
             connection.update((value) => ({ ...value, backendAvailable: true }));
         } else {

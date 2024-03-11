@@ -9,23 +9,62 @@ import time
 import nest_asyncio
 nest_asyncio.apply()
 
+# NIC Naming conversions
+# ref: https://manpages.ubuntu.com/manpages/focal/man7/systemd.net-naming-scheme.7.html
+nic_naming_prefix = {
+    'en':'ethernet',
+    'ib':'infiniBand',
+    'sl':'slip', # serial line IP
+    'wl':'wireless local area network',
+    'ww':'wireless wide area network',
+    'br': 'bridge',
+    'docker': 'docker',
+    'lo': 'loopback',
+    'veth': 'virtual ethernet devices',
+    'virbr': 'virtual bridges',
+}
+
+import netifaces as ni
+
+def get_ip(nic_prefix='en'):
+    interfaces = ni.interfaces()
+
+    for i in interfaces: #Will cycle through all available interfaces and check each one.
+        if i.startswith(nic_prefix): # this is the ethernet
+            try:
+                ni.ifaddresses(i)
+                ip = ni.ifaddresses(i)[ni.AF_INET][0]['addr']
+                return ip
+            except: #Error case for a disconnected Wi-Fi or trying to test a network with no DHCP
+                return None
+            
 app = FastAPI()
 
 origins_allowed = [
-    "http://localhost:5173",
+    # "http://localhost:5173",
+    # "http://192.168.1.11:5173",
+    "http://192.168.1.13:5173",
+    # "https://localhost:5173",
+    # "https://192.168.1.11:5173",
+    # "https://192.168.1.13:5173",
 ]
+
+#origins_allowed.append(f'http://{get_ip()}:5173')
+
+print(f'origins_allowed={origins_allowed}')
 
 model_name = "tiny"
 model = whisper.load_model(model_name)
 preffered_lang = "en"
 
-
+# ref: https://fastapi.tiangolo.com/tutorial/cors/
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins_allowed,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    app= app,
+    allow_origins="*", # origins_allowed,
+    allow_credentials=True, # cookies should be supported for cross-origin requests.
+    allow_methods=["*"], # Defaults to ['GET']
+    allow_headers=["*"], # Defaults to []. use ['*'] to allow all headers. 
 )
 
 @app.get("/ping")
